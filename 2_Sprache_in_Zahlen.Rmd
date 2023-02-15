@@ -1,0 +1,424 @@
+---
+title: "Text Analysis"
+author: "Marius Saeltzer"
+date: "8 11 2022"
+output: html_document
+---
+
+```{r}
+
+source("./tools.r")
+```
+
+
+## Quantitative Text Analyse
+
+Die Textanalyse ist eine der ältesten Methoden der Sozialwissenschaften: Das Lesen und Interpretieren von gesprochener oder geschriebener Sprache ist eine Grundmethode in Politikwissenschaft, Kommunikationswissenschaft und Soziologie. Reden, Wahlprogramme, Nachrichtenartikel oder Social-Media-Beiträge wurden alle einer Inhaltsanalyse unterzogen. Allerdings waren diese Methoden immer in ihrer Reichweite begrenzt, da die Anzahl der von den Forschern zu lesenden und zu vergleichenden Texte im Gegensatz zu der schieren Menge an Text, die im sozialen Bereich generiert wird, stark begrenzt ist.
+
+Zentral ist hierbei die "Codierung" von Text in Sinnkategorien. Wie häufig referenziert ein bestimmtes Konzept, eine bestimmte Entität oder latentes Konstrukt. Verwendet der Autor einen bestimmten "Stil", oder können wir Sprechakte identifizieren. Um dies REPLIZIERBAR zu machen, definieren Wissenschaftler formelle Regeln, in denen sie die Kategorien festlegen, definieren und in Bezug mit möglichen Inhalten setzen. Diese werden dann durch menschliche Koder an real vorliegenden Texten interpretiert. 
+
+Details finden sich vor allem im Standardwerk 
+*Krippendorff, K. (2018). Content analysis: An introduction to its methodology. Sage publications.*
+
+ 
+
+
+### Das Comparative Agenda Project
+
+In diesem Workshop beschäftigen wir uns mit einem relativ leicht zu operationalisierenden Konzept: dem politischen Thema. Worüber politische, aber auch mediale Akteure kommunizieren ist eine zentrale Kategorie. Sie steht in Bezug zu politischen Prioritäten, der "Agenda" der Medien und/oder wessen Interessen im politischen Prozess eine Rolle spielen. Diese Themen finden sich immer wieder über verschiedene Textformen hinweg, von Parlamentsreden, über Wahlprogramme, Zeitungsartikel bis hin zur Kommunikation in den Sozialen Medien.
+
+Das Comparative Agenda Project hat es sich zur Aufgabe gemacht, ein allgemeines Schema zu entwickeln, nach dem sich Texte in Kategorien einorden lassen. Hierfür wurden Hierarchische Kategorien entwickeln, von der Domäne zum bestimmten Topic. 
+
+```{r}
+load("data/codebook.rdata")
+```
+
+
+
+So gehören alle mit 2 beginnenden Themen zu 2: Civil Rights. Auf diese Weise lassen sich feingliedrig alle Texte in engere oder breitere Kategorien einordnen.
+
+
+## Parteiprogramme
+
+Wir importieren nun ein offizielles Beispiel: Alle Wahlprogramme deutscher Parteien. Diese werden durch das CAP Projekt auf Satzebene annotiert.
+
+```{r}
+
+man<-read.csv("data/manifesto.csv",encoding = "UTF-8")
+
+```
+
+
+```{r}
+
+man$sentence_text[6]
+
+```
+
+
+```{r}
+table(man$party_name)
+```
+
+
+```{r}
+min(man$election_year)
+max(man$election_year)
+```
+
+
+Wir werden im folgenden Versuchen, dieses Annotationschema auf neue Daten zu übertragen. Zu diesem Zweck habe ich eine Reihe von Social Media Botschaften mitgebracht, namentlich die Tweets aller Bundestagsabgeordneter aus dem Jahr 2017. 
+
+Während natürlich davon auszugehen ist, dass sich Themen des Jahres 1949 deutlich von denen des Jahres 2017 unterscheiden, und auch, dass Wahlprogramme eine völlig andere Textsorte sind als Tweets, haben bisherige Studien gezeigt, dass die Begriffe die in Wahlprogrammen zu finden sind oft hilfreich sind um ähnliche Inhalte z.B. in Parlamentsreden zu finden.
+
+```{r}
+load("data/sample.rdata")
+names(val)
+val<-val[,c("num_id","tweets","contingent")]
+```
+
+
+Die hier vorliegende, nach Parteien und Themen vorgeclusterte Stichprobe, soll nun anntotiert werden, um einen Überblick zu bekommen, wie gut das später automatisiert funktioniert. Wir wählen also eine kleine Menge Texte (ca 30 Tweets pro Teilnehmendem), und ordnen ihn ein in Kategorien.
+
+
+Wir werden nun im Workshop Zahlen zuweisen. Bitte tragen sie hier ihre Zahl ein.
+
+
+```{r}
+yournumber<-1
+```
+
+
+```{r}
+
+task<-val[val$contingent==yournumber,]
+
+task$class<-NA
+write.csv(task,file=paste0("coding",yournumber,".csv"))
+
+```
+
+In ihrem Ordner taucht nun eine csv Datei auf, die sie selbst codieren können.
+
+
+
+
+
+
+
+# Automatisierte Textanalyse 
+
+Das war ganz schön anstrengend, oder? Was für 30 Codings bereits Zeit braucht, ist für 30,000 Codings kaum denkbar. Große Projekte wie das CAP beschäftigen hunderte Coder, um dies auf breite Textcorpora, wie ganze Wahlprogramme übertragen zu können. 
+
+Für einzelne Wissenschaftler*innen, aber auch je nach Textsorte große Projekte, ist das nicht zu leisten. Aus diesem Grund machen wir uns als einfallsreiche Sozialwissenschaftlerinnen die Informatik zu Nutze.
+
+Das (teil-) automatisierte Ausweten großer Textmengen ist ein zentraler Bestandteil moderner Digitaltechnologie. Vom Spamfilter bis zur Google-Suche: Natural Language Processing ist eine der Kerndisziplinen des "maschinellen Lernens". Diese Technologie lässt sich auch sozialwissenschaftlich sinnvoll anwenden. Ob eine Email "spam" oder "ham" ist, ist eine sehr ähnliche Frage wie die, ob es im Text um Umwelt geht oder Kriminalität. In beiden Fällen sagen uns die Prävalenzen bestimmmter Begriffe, worum es geht. Wir zählen also Worte, um Rückschlüsse zu ziehen auf die "Klasse" eines Dokumentes. Um dies zu erreichen, müssen wir die Worte zuerst verdaten. Der nächste Abschnitt zeigt, wie man Sprache in Zahlen verwandeln kann.
+
+
+
+
+## quanteda
+
+R bietet eine Reihe von tools, die dieses Vorgehen ermöglichen. Insbesondere das Paket quanteda beinhaltet eine große Bandbreite von Methoden, schnell und effizient auch große Datenmengen zu verarbeiten.
+
+Zuerst sollten wir einige Grundbegriffe klären:
+
+
+    - Korpus: Ein Text "data set" für lang Zeichenketten
+    
+    - Tokens: Eine Übersetzung von einzigartiger Begriffe in Zahlen
+    
+    
+    - DFM: die "document-feature-matrix", die das Vorkommen von tokens in Dokumenten zählt
+    
+    
+    
+```{r}
+library(quanteda)
+```
+
+
+## To Corpus
+
+Zuerst bereiten wir den Text vor und fügen ihn in ein Korpus ein:
+
+Korpora sind Datenobjekte zur Speicherung großer Textmengen. R wurde ursprünglich nicht entwickelt, um etwas anderes als Zahlen zu speichern, eine Funktion, die Sie bemerken werden, wenn Sie großen Text öffnen, der in data.frame-Zellen gespeichert ist. Es ist sehr langsam und höchst ineffizient. Reguläre Ausdrücke gehören zu den langsamsten Funktionen in R.
+Pakete wie snowball, tm, text2vec und das neueste quanteda bieten eine Korpusklasse, die effiziente wortbasierte Operationen ermöglicht. Sie sind etwas kontraintuitiv und ähneln Listen in dem Sinne, dass sie Metadaten speichern. Quanteda hat die nette Eigenschaft von docvars, Text in eine data.frame-Form zu bringen, was eine datenähnlichere Interpretation von Korpora ermöglicht als tm.
+
+
+
+
+
+
+```{r}
+corp<-corpus(man$sentence_text,docvars=man)
+```
+
+
+
+### Data
+
+
+
+```{r}
+as.character(corp)[1347]
+```
+Wie Sie sehen können, wenn Sie sich das Ergebnis von as.character() ansehen, ist dies eine Menge Zeug. Um es in den Griff zu bekommen, werden wir es jetzt "berechenbarer" für den Computer machen. Dazu verwenden wir sogenannte Tokenizer.
+
+Ein Tokenizer zerlegt einen Text grundsätzlich anhand von Sprachregeln in Elemente. Diese Elemente können sein
+
+  - Absätze
+  - Sätze
+  - Wörter
+  - ngrams (Tupel von Wörtern, die aufeinander folgen)
+  - Buchstaben
+  
+Was Sie wollen, hängt davon ab, wie Sie mit Daten umgehen. Der einfachste Ansatz ist eine Worttüte (bag-of-words), in der Sie einfach zählen, wie oft ein Wort in einem Dokument vorkommt. Dies werden wir hier tun und was die meiste Zeit getan wird, also ist es die Standardoption. Wenn Sie jedoch ausgefeiltere Methoden wie word embeddings verwenden, wird die Tokenisierung in ngrams oft bevorzugt. 
+
+In dieser einfachen Einführung verwenden wir einen einfachen Wortschatzansatz. Die Annahme des Wortschatzes ist, dass die Reihenfolge, in der Wörter vorkommen, für die Bedeutung des Textes eigentlich keine Rolle spielt. Diese ist häufiger erfüllt, als man annehmen möchte.
+
+```{r}
+
+
+
+ft<-tokens(corp)
+
+
+ft[5:10]
+
+
+```
+
+
+Wie Sie sehen können, wenn Sie sich das Ergebnis von texts() ansehen, ist dies eine Menge Zeug. Um es in den Griff zu bekommen, werden wir es jetzt "berechenbarer" für den Computer machen. Dazu verwenden wir sogenannte Tokenizer.
+
+Ein Tokenizer zerlegt einen Text grundsätzlich anhand von Sprachregeln in Elemente. Diese Elemente können sein
+
+  - Absätze
+  - Sätze
+  - Wörter
+  - ngrams (Tupel von Wörtern, die aufeinander folgen)
+  - Briefe
+  
+Was Sie wollen, hängt davon ab, wie Sie mit Daten umgehen. Der einfachste Ansatz ist eine Worttüte (bag-of words), in der Sie einfach zählen, wie oft ein Wort in einem Dokument vorkommt. Dies werden wir hier tun und was die meiste Zeit getan wird, also ist es die Standardoption. Wenn Sie jedoch ausgefeiltere Methoden wie Wörterinbettungen verwenden, wird die Tokenisierung in ngrams oft bevorzugt. 
+
+
+Wie Sie sehen können, hat der Computer drei Dinge getan:
+  1. es zerlegt den Text in einzelne Wörter
+  2. es entfernte Satzzeichen, die jetzt nutzlos sind
+  3. es entfernt Zahlen
+
+In diesem Schritt führen wir etwas aus, das im Hintergrund indexiert wird. Wie ich bereits erwähnt habe, sind reguläre Ausdrücke sehr langsam, da sie die ganze Zeit über übereinstimmenden Text gleiten müssen. Dies ist nicht mehr das Problem, sobald wir den Text tokenisiert haben. Im Hintergrund hat jedes Wort eine numerische ID erhalten, normalerweise eine fortlaufende Liste, die es dem Computer ermöglicht, ein Wort mit einer Zahl zu maskieren. Computer können viel besser mit Zahlen umgehen als mit Zeichenketten. Im Grunde weist der Computer also jedem eindeutigen Token in einem Datensatz eine Nummer zu, dies wird unser VOKABULAR (vocabulary) genannt.
+
+
+
+
+## DFM
+
+
+Aber um Texte mit statistischen Werkzeugen zu analysieren, müssen wir sie in eine Form bringen, die eine statistische Analyse erlaubt. Dieses Formular ist ein Rechteck mit Beobachtungen und Variablen (eine Matrix), oder wie sie beim maschinellen Lernen genannt werden, Fälle und Merkmale (features). Beim Bag-of-Words-Ansatz ordnen wir das Vorkommen dem Vokabular zu, indem wir eine Dokument-Feature-Matrix verwenden.
+
+Wie ein data.frame enthält sie Zeilen mit Beobachtungen (Dokumente) und Spalten mit Merkmalen (Wörtern), wie Variablen. Sie können das Vorkommen eines Wortes in einem Dokument als eine Variable des Dokuments verstehen.
+
+```{r}
+dfc<-dfm(ft)
+dfc
+```
+
+Wie Sie sehen können, wird jedes Dokument auf einer numerischen Zeile dargestellt, die Ihnen für jedes Merkmal (Wort) sagt, wie oft es in dem jeweiligen Dokument vorkommt. Wie Sie sich vorstellen können, sind die meisten dieser Vorkommen 0, da die meisten Terme selten sind, während einige Terme häufig vorkommen (Zipf's Law). Dies macht eine Matrix SPARSE, was bedeutet, dass sie hauptsächlich aus Nullen besteht. Während ein Dokument durch die darin enthaltenen Begriffe charakterisiert wird, wird ein Wort durch die Dokumente charakterisiert, in denen es vorkommt.
+
+Werfen wir zunächst einen Blick auf unsere dfm. Um zu untersuchen, was sich in Ihrem dfm befindet, können wir einfach seine wichtigsten Merkmale darstellen.
+
+
+```{r}
+
+scores<-topfeatures(dfc,40)
+scores<-scores[order(scores,decreasing =F)]
+barplot(scores,
+        horiz=TRUE,las=1,cex.axis =.2)
+
+
+```
+
+Sie können sehen, dass gängige Wörter wie „die“ hier am prominentesten sind. Das ist natürlich sinnvoll, verringert aber die Interpretierbarkeit. Für die Textanalyse müssen wir herausfinden, welche Größen sich auf die zu messenden Konzepte beziehen. Es geht also weniger um die schiere Anzahl an Begriffen, sondern um die Anzahl relevanter Begriffe. Mit anderen Worten, wir wollen die semantischen Marker extrahieren, die sich auf interessierende Mengen beziehen.
+
+## Vorverarbeitung und Feature Engineering
+
+Einfache Textmodelle wie die Klasse der Bag-of-Word-Modelle müssen sich auf Dokumentmerkmalsmatrizen stützen, um die Daten zu verstehen. Wir werden später über ausgefeiltere Ansätze sprechen, aber auf der Bag-of-Word-Ebene gibt es nicht so viel, was wir rechnerisch tun können. Da wir den Kontext verlieren, in dem ein Wort über das Dokument hinaus verwendet wird, in dem es vorkommt, verlieren wir viel Granularität in den Daten. Aber wir können dies wiederherstellen, indem wir ändern, woraus das dfm besteht.
+
+Vorverarbeitung und Feature-Engineering finden auf allen Ebenen der NLP-/Textanalyse statt, sind jedoch besonders wichtig in BOW-Ansätzen, da anspruchsvollere Modelle ihre eigenen Pipelines enthalten. Sie können jedoch enorme Auswirkungen auf die Ergebnisse haben. Die Frage, ob URLs, Nummern, Stemming oder andere Verarbeitungsschritte entfernt werden sollen, sind von großer Bedeutung und können die Ergebnisse grundlegend verändern. Die Grenze zwischen „neutralen“ Änderungen und der Einführung/Entfernung von Vorurteilen ist schmal. Die Definitionen von PREPROCESSING und FEATURE ENGINEERING sind sehr fließend. Ich kann Ihnen nicht genau sagen, was der Unterschied in jedem Verständnis ist, aber ich werde es so definieren: Wenn es darum geht, nutzlose Informationen zu entfernen, die Rechenleistung verbrauchen, nenne ich es Vorverarbeitung. Wenn es einen theoretischen Kern hat, der die Struktur des Textes annimmt und wie er sich auf Ihr Konzept bezieht, ist es Feature Engineering.
+
+
+### Vorverarbeitung / Preprocessing
+
+Beispielsweise bietet quanteda eine Reihe von "Standard"-Verfahren an. Wenn Sie Ihr Tokens-Objekt dfmieren, senkt es standardmäßig alle Caps, Sie müssen ihm etwas anderes mitteilen. Obwohl diese recht einfach sind, können sie viele Probleme verursachen. Wenn Sie sich für Medienkonsum interessieren, könnten Links von Interesse sein. Wenn Sie nach Eigennamen oder im Deutschen nach Hauptwörtern im Allgemeinen suchen, möchten Sie vielleicht die Groß- und Kleinschreibung so beibehalten, wie sie ist. In gewisser Weise nutzen diese Schritte bereits Feature Engineering.
+
+```{r}
+
+ft<-tokens(corp,remove_punct=T,
+           remove_numbers = T,
+           remove_url = T, 
+           split_hyphens = T,
+           remove_symbols = T)
+
+
+```
+
+Here, we will save our dfm for later!
+
+```{r}
+dfc_res<-dfm(ft)
+save(dfc_res,file="./data/main_dfm.rdata")
+```
+
+
+
+```{r}
+ft[1:10]
+```
+
+
+
+## ngrams
+
+Eine zweite, invasivere Möglichkeit, Ihr dfm zu ändern, besteht darin, von einzelnen Token zu Ngrams zu wechseln. N-Gramme (im Sinne von 1-Gram, 2-Gram, 3-Gram) sind Wortfolgen, die zusammen in Tokens umgewandelt werden. Konservative_partei, Konservative und Partei erhalten also 3 unterschiedliche Indizes. Das lässt die Komplexität eines Datensatzes natürlich explodieren. Die Anzahl der Merkmale wächst exponentiell mit n. Probieren wir es aus.
+
+
+
+```{r}
+
+dfm_ng<-dfm(tokens_ngrams(ft))
+```
+
+```{r}
+
+
+
+
+dfm_ng<-dfm(tokens_ngrams(tokens(corp),n = 2))
+
+dfm_ng
+
+```
+
+Warum sollten wir das tun? Oben haben wir über das Problem gesprochen, dass Wörter in verschiedenen Kontexten unterschiedliche Bedeutungen haben. Partei kann in einem Liedtext etwas ganz anderes bedeuten als in einem Wahlprogramm. Hier können wir sie also bis zu einem gewissen Grad auf der Grundlage ihrer Bedeutung zusammenhalten. Eine zweite, theoriegetriebene Argumentation wäre, dass bestimmte Ausdrücke ein Konzept enthalten, andere nicht. „Wille des Volkes“ bedeutet etwas anderes als „Wille“, „von“, „dem“ und „Volk“.
+
+Betrachtet man die Verteilung, so dominiert auch hier wieder der gemeinsame Ausdruck. Natürlich ist „we_will“ in Manifesten das Top-Feature.
+
+```{r}
+
+scores<-topfeatures(dfm_ng,40)
+scores<-scores[order(scores,decreasing =F)]
+barplot(scores,
+        horiz=TRUE,las=1,cex.axis =.2)
+
+```
+
+
+
+## Stemming 
+
+Grundsätzlich ist Stemming das Gegenteil von Ngrams. Anstatt Features spezifischer zu machen, macht Stemming sie allgemeiner. Die Idee ist, dass wir in vielen Sprachen kleine Änderungen in Wörtern haben, wie Beugungen, Pluralformen oder Verbformen. Aber das ändert nichts an der Bedeutung des Wortes. worker und worker bedeuten dasselbe, würden aber in einem dfm unterschiedliche Indizes bekommen.
+
+Ein Stemmer hilft, indem er das Ende eines Wortes abschneidet, indem er es auf seinen "Stamm" schneidet.
+
+
+```{r}
+dfc_s<-dfm(tokens_wordstem(ft))
+dfc_s
+```
+
+Dies trägt natürlich dazu bei, die Heterogenität von Merkmalen zu bekämpfen, während gleichzeitig die Rechenanforderungen (weniger zu berechnende Terme) auf Kosten möglicher Fehler beim Zusammenführen von Termen reduziert werden. Partisan und Partei mögen eins werden, bedeuten aber verschiedene Dinge. Dies kann auf Kosten weiterer Ressourcen vermieden werden.
+
+Die ausgefeiltere Version der Wortstammbildung ist die Lemmatisierung. Wie wir es in Sitzung 1 getan haben, können wir Korpora kommentieren und prüfen, wie die Begriffe verwendet werden, um dann dieselben Begriffe zusammenzuführen. Verben werden nicht abgeschnitten, sondern zu ihren Infinitivformen aggregiert. Dies ist jedoch rechenintensiv und beseitigt einen Grund, warum Stemming überhaupt angewendet wird. Ob Sie es verwenden möchten oder nicht, hängt von Ihren Daten ab, und Sie sollten Ihre Ergebnisse überprüfen, wenn das Stemming seltsame Effekte hat, die Sie nicht erwartet haben.
+
+
+
+## Merkmals-Zestörung
+
+
+Eine weitere Brute-Force-Methode zum Umgang mit Datenheterogenität besteht darin, Features einfach zu entfernen. Dies kann zufällig geschehen oder durch vordefinierte Listen, wie z. B. "Stoppwörter". Stoppwörter sind Begriffe, die für ein Bag-of-Words-Modell keine wirkliche Rolle spielen. Sie sind so häufig, dass sie wenig Signal enthalten, sodass ihre Entfernung den Bedarf an Rechenressourcen verringern könnte. Quanteda enthält eine Stoppwortliste für die meisten Sprachen (aber Vorsicht vor der deutschen).
+
+
+
+
+
+Stoppwörter sind Wörter, die für den Bag-of-Words-Ansatz üblich und nicht informativ sind, da sie meist informative Wörter miteinander verbinden. Und wenn, dann usw. spielt keine Rolle mehr, also entfernen wir sie.
+
+Schauen wir uns Stoppwörter an, die in quanteda implementiert sind!
+
+```{r}
+stopwords("de")
+
+```
+
+
+```{r}
+ft<-tokens_tolower(ft)
+
+ft<-tokens_select(ft,pattern=stopwords("de"),selection='remove')
+
+
+dfc<-dfm(ft)
+```
+
+
+## trimming dfm's
+
+Eine letzte Möglichkeit besteht darin, Begriffe nach Menge zu entfernen. Nach dem Gesetz von Zipf sind häufige Begriffe selten und seltene Begriffe sind häufig. Ein Korpus enthält viele Wörter, die keinen diskriminierenden Charakter haben, und viele Wörter, die so selten sind, dass wir sie nicht sinnvoll mit einem Konzept verbinden können. Quanteda bietet eine Reihe von Tools, um Ihr DFM basierend auf Termfrequenzen zu trimmen.
+
+```{r}
+dfc<-dfm_trim(dfc,max_termfreq = .95,termfreq_type = "quantile",verbose = T)
+dfc<-dfm_trim(dfc,min_termfreq = .7,termfreq_type = "quantile",verbose = T)
+
+
+
+```
+
+
+
+```{r}
+par(mar=c(8,13,4,2)+0.1)
+scores<-topfeatures(dfc,40)
+scores<-scores[order(scores,decreasing =F)]
+barplot(scores,
+        horiz=TRUE,las=1,cex.axis =.2)
+
+
+```
+
+
+
+
+Man kann auch selektieren basierend auf dem Vorkommen in Dokumenten.
+
+```{r}
+dfc<-dfm_trim(dfc,max_docfreq = 10000,docfreq_type = "count",verbose = T)
+dfc<-dfm_trim(dfc,min_docfreq = 100,docfreq_type = "count",verbose = T)
+
+
+
+```
+
+
+
+```{r}
+
+dfm_ng<-dfm(tokens_ngrams(tokens_select(ft,pattern=stopwords("en"),selection='remove')))
+dfm_ng<-dfm_trim(dfm_ng,max_termfreq = .95,termfreq_type = "quantile",verbose = T)
+dfm_ng<-dfm_trim(dfm_ng,min_termfreq = .95,termfreq_type = "quantile",verbose = T)
+
+
+
+```
+
+
+```{r}
+par(mar=c(8,13,4,2)+0.1)
+scores<-topfeatures(dfm_ng,40)
+scores<-scores[order(scores,decreasing =F)]
+barplot(scores,
+        horiz=TRUE,las=1,cex.axis =.2)
+
+
+```

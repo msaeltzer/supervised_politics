@@ -1,0 +1,799 @@
+---
+title: "Introduction to R"
+author: "Marius Saeltzer"
+date: "07.10.2019"
+output: html_document
+---
+
+```{r}
+
+#install.packages('knitr')
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Herzlich Willkommen zum Workshop "Quantitative Inhaltsanalyse in R".
+
+Wir werden heute einen weiten Weg gehen von den Wurzeln der Sozialwissenschaft bis in neuest Entwicklungen unter dem Einfluss künstlicher Intelligenz. 
+
+
+Die Textanalyse ist eine der ältesten Methoden der Sozialwissenschaften: Das Lesen und Interpretieren von gesprochener oder geschriebener Sprache ist eine Grundmethode in Politikwissenschaft, Kommunikationswissenschaft und Soziologie. Reden, Wahlprogramme, Nachrichtenartikel oder Social-Media-Beiträge wurden alle einer Inhaltsanalyse unterzogen. Allerdings waren diese Methoden immer in ihrer Reichweite begrenzt, da die Anzahl der von den Forschern zu lesenden und zu vergleichenden Texte im Gegensatz zu der schieren Menge an Text, die im sozialen Bereich generiert wird, stark begrenzt ist.
+
+Um diese Probleme anzugehen, haben Informatik und Linguistik Methoden entwickelt, um mit dieser Datenmenge umzugehen. Die Sozialwissenschaften haben sich im Laufe des 21. Jahrhunderts langsam angepasst. Es wurde verwendet, um verschiedene Dimensionen von Text zu identifizieren, wie z. B. Thema, Rahmen, Stile oder spezifischere Dimensionen wie "Ideologie" oder "Populismus".
+
+Ein zentrales Anliegen bei der Beantwortung von Forschungsfragen unter Verwendung von Text als Daten ist die Verbindung latenter Konzepte mit ihren Manifestationen im Text. Darum soll es in diesem Kurs gehen. Es stellt Werkzeuge vor, um herauszufinden, was für Forscher in einem beliebigen Textkorpus interessant ist. Es ist zentral, die Grenzen dieses Ansatzes zu betrachten.
+
+Es kann die Ähnlichkeit von Körpern natürlicher Sprache messen. Die Methoden der Textanalyse unterscheiden sich darin, welche Art von Ähnlichkeit wir beobachten können. Es ist Sache des Forschers, einen Weg zu finden, die Art der Ähnlichkeit zu wählen, die für seine Forschungsfrage sinnvoll ist.
+
+Diese Ähnlichkeit kann explorativ (Auffinden der offensichtlichsten Unterschiede und Ähnlichkeiten) oder spezifisch (Auffinden einer bestimmten Dimension der Ähnlichkeit) sein. Mit anderen Worten, die automatisierte Textanalyse kann eine ZUVERLÄSSIGE Möglichkeit bieten, Ähnlichkeiten zu beobachten, aber es liegt am Forscher, sie zu einem VALIDEN Maß für das Konzept zu machen, an dem er interessiert ist.
+ 
+Um diese Methoden anwenden zu können, müssen wir zunächst aus Text quantitativ auswertbare Daten machen: Der erste Abschnitt dieses Kurses beschäftigt sich mit der Frage, wie wir aus einer Buchstabenfolge bedeutungstragende Zahlen machen können. Wir lernen die obskure Kunst der TEXTDARSTELLUNG.
+
+Der zweite Teil dieses Kurses zeigt Methoden auf, die die statistisch wichtigsten Ähnlichkeiten mithilfe von UNSUPERVISED LEARNING identifizieren.
+
+Der dritte Teil dieses Kurses stellt Methoden vor, die mithilfe von SUPERVISED LEARNING interessierende Dimensionen für Text vordefinieren.
+
+Block 1: Einführung in R (60)
+Block 2: Manuelle Inhaltsanalyse (30 Min + 20 Minuten Annotationsaufgabe)
+Block 3: Sprache in Zahlen (30 Minuten) 
+Block 4: Exploration (45 Minuten)
+Block 5: Betreutes Lernen ;) (60 Minuten)
+
+
+
+
+# Warum R?
+
+
+ R ist eine hohe (d. h. stark vordefinierte) Programmiersprache für statistisches Rechnen. Es ist kein Softwarepaket wie Stata oder SPSS, das lediglich Datenanalyse ermöglicht. Mit Hilfe von Erweiterungen kann es für Computer, App-Entwicklung und viele andere Dinge verwendet werden. In diesem Skript gebe ich eine Einführung in R von Null bis zu dem Punkt, an dem Sie Twitter-Daten sammeln und analysieren können. Dazu werde ich eine grundlegende konzeptionell geführte Einführung geben, die Ihnen die Werkzeuge zum Erlernen aller Funktionen gibt, die in diesem Kurs nicht behandelt werden, aber für Ihre persönliche Forschung (oder Ihren Job) notwendig sind.
+
+
+
+### Further 'reading'
+
+R zu lernen ist eine praktische Aufgabe. Die meisten Kurse geben Ihnen kaum mehr als eine Inspiration, was Sie damit machen KÖNNEN. Oft muss man es erst lernen. Mein bester Rat ist: Finden Sie ein Projekt und versuchen Sie es. Wenn Sie Fragen haben, fragen Sie Leute, die Sie kennen (Klassenkameraden und ich) oder das Internet.
+
+https://stackoverflow.com/ 
+
+Practice: 
+
+www.datacamp.com
+  
+www.codeacademy.com
+
+
+## R und Studio
+
+R ist eine Programmiersprache, ist aber in zahlreiche andere Programme eingebunden. Was Sie hier sehen, ist ein sogenanntes Markdown-Skript, eine Art der Berichterstattung,
+um Wissen zu dokumentieren.
+
+Es ist in R Studio eingebettet, eine Entwicklerumgebung für R, die uns viele Informationen und Tools zur Verfügung stellt. In diesem Kurs arbeiten wir mit R Studio.
+
+
+script | environment 
+--------------------
+console| flexible window (help, plot, files)
+
+
+
+### Script
+
+Ein Skript ist ein primitives Computerprogramm. Es ist eine Befehlsliste
+der Reihe nach ausgeführt. Es ist das Kochrezept Ihrer Daten.
+
+Es hat Parallelen zu:
+
+SPSS-Syntax
+Stata Do-Datei
+Excel-Makro
+
+In R müssen Sie Ihr Skript ausführen, um Ergebnisse zu erhalten. Bitte bewahren Sie sie immer gut auf. Sie sind Ihre EINZIGE Möglichkeit, mit Daten zu interagieren und alles zu speichern, was Sie tun. Mit Skripten können Sie Ihre Ergebnisse replizieren, Prozesse automatisieren und das volle Potenzial von R nutzen.
+
+
+Was Sie hier sehen, ist ein sogenanntes Markdown-Skript. Markdown-Skripte sind schön formatierte r-Skripte.
+
+Klicken Sie auf die obere rechte Schaltfläche mit dem grünen Plus, um ein klassisches Skript zu erstellen. Hier werden Sie Ihre Programmierung vornehmen. Ich gebe Ihnen hauptsächlich Abschläge für schöne Dokumentationen.
+
+Die Verwendung der Funktion „Ausführen“ in einem Skript ermöglicht Ihnen dies
+Wie Sie sehen können, ist der Code in diese kleinen "Blöcke", wie sie genannt werden, eingebettet. Sobald Sie knitr installiert haben, können wir sie ausführen, indem Sie auf das kleine grüne Dreieck klicken.
+
+In Markdown-Skripten definieren wir kleine Blöcke, in denen Sie ein Skript schreiben und ausführen können. Stellen Sie sich einfach den folgenden Block als Ihr Skript vor.
+
+```{r}
+print('Hello, World')
+
+```
+
+
+In einem Skript können Sie ausführen, indem Sie Strg + Eingabetaste (in Windows) drücken, wodurch das gesamte Skript ausgeführt wird, oder Sie können nur die Teile des Skripts markieren, die Sie ausführen möchten.
+
+
+Es bewegt sich vom Skript zur Konsole
+
+
+  Skript | Environment
+  --||----------------
+    \/
+  Konsole| flexibles Fenster (Hilfe, Plot, Dateien)
+
+
+Wenn Sie möchten, dass Dinge nicht von der Konsole gezählt werden, geben Sie sie ein
+mit: #
+
+```{r}
+# I am a comment: I say 
+print('Hello, World')
+
+```
+
+
+### Konsole
+
+In Mardown-Skripten erstellt R Studio eine kleine Konsole unter dem Code-Chunk. Sie können die Konsole hier öffnen, indem Sie das minimierte Fenster unten erneut öffnen. In normalen Skripten ist die Konsole Ihre Hauptmethode zum Anzeigen von Daten.
+
+Was auch immer Sie in die Konsole eingeben, ist nicht dauerhaft. Aus diesem Grund schlage ich vor, niemals direkt in die Konsole zu schreiben. Sachen werden verloren gehen. Schreiben Sie in das Skript, was Sie behalten möchten.
+
+
+
+
+#### Fehler und Warnungen
+
+Wenn etwas schief geht (und das wird es, glauben Sie mir), wird R Sie darüber informieren, indem es entweder einen Fehler oder eine Warnung ausgibt
+
+Fehler stoppen die Ausführung des CURRENT-Befehls, nicht des gesamten Skripts (wie in stata)
+
+Warnungen teilen Ihnen mit, wenn R denkt, dass Sie etwas unbeabsichtigt gemacht haben, aber den Code trotzdem ausführen wird.
+
+Fehler sind in R oft sehr kryptisch. Wie man damit umgeht, besprechen wir im Kurs.
+
+
+### Hilfebereich
+
+Das Hilfefenster unten rechts enthält eine Reihe nützlicher Funktionen, aber dazu später mehr.
+
+```{r}
+?print
+```
+
+
+
+## Pakete
+
+
+
+Das Hilfefenster enthält auch Ihre verfügbaren Pakete. Wie ich bereits erwähnt habe, ist R eine Open-Source-Programmiersprache und jeder, der etwas beitragen möchte, kann Pakete aus seinem Code formulieren. Pakete sind wie kleine Erweiterungen von R und sie importieren zahlreiche Funktionalitäten in Form neuer Funktionen.
+
+Wenn Sie überhaupt ein Paket erhalten möchten, führen Sie es aus
+
+```{r}
+#install.packages('knitr')
+```
+
+danach bitte nicht mehr ausführen sondern einen Hashtag voranstellen, damit es nicht erneut ausgeführt wird.
+
+Wichtig: Bei Installationspaketen ist die Groß-/Kleinschreibung zu beachten und muss in "" oder '' gesetzt werden
+
+Einmal installiert muss es in jeder R-Session aktiviert werden, da sich Pakete oft gegenseitig nerven ;)
+
+
+Zum Beispiel: die einleitenden Datensätze, die in den meisten Einführungen verwendet werden:
+
+
+```{r}
+library(car)
+```
+Im normalen Rstudio werden hier Plots (und ihre Optionen) angezeigt.
+
+
+### Umfeld
+
+Auf der rechten Seite finden Sie die Umgebung. Sie speichert Objekte, Werte und Funktionen, die Sie erstellen. Um zu verstehen, was dies bedeutet, lernen wir im nächsten Abschnitt grundlegende Operationen und Konzepte kennen.
+
+## Die Grammatik von R
+
+Manchmal sieht es so aus, als wäre Programmieren bedeutungsloses Kauderwelsch. Um zu verstehen, was vor Ihnen liegt, ist es sinnvoll, ein Glossar zu haben, was diese Zeichen und Zahlen alle bedeuten:
+
+
+Kommentare #
+
+  - Alles, was nach einem # geschrieben wird, ist ein Kommentar  
+
+Values  "1",1, TRUE, FALSE
+
+  - R zählt nur Werte. Es gibt 3 Grundtypen: Zahlen, Zeichenketten, Logik
+  
+  
+Operations + * - / ^
+
+  - Sie verbinden Werte mit mathematischen Operationen
+
+Logic > < | !
+
+ - und vergleicht sie mit logischen Operatoren. Intuition: Operatoren TUN, während Logikoperationen FRAGEN. Sie liefern immer die logischen Werte TRUE oder FALSE
+während Operatoren numerische Werte zurückgeben.
+
+
+Objekte <- [] $ @
+  
+  - Objekte sind die Form von Werten in R. Jeder Wert kann mit <- einem Objekt zugewiesen oder mit [] aus einem Objekt extrahiert werden. Listenobjekte können den $-Operator verwenden und einige High-Level-Objekte verwenden möglicherweise @ (dies ist sehr fortgeschritten)
+ 
+Funktionen () ~
+
+  - Funktion nimmt einen Wert auf und gibt etwas dafür zurück. Sie sind komplexe Operatoren. Funktionen sind in baseR zu finden, Pakete werden neue hinzufügen und Sie können sogar Ihre eigenen schreiben. Jede Funktion verwendet diese Klammern und möglicherweise die Formelschreibweise ~
+
+Kontrolle {}
+  - Alles, was mit Programmierung zu tun hat, verwendet diese Klammern
+
+tidyr %>% <- Wenn Sie dies sehen, führen Sie es aus
+
+Paketoperationen :: , :::
+
+
+Die Bedeutung dieser Schlüssel zu kennen bedeutet, R zu verstehen. Grundsätzlich kann alles in R mit diesen 18 Elementen ausgedrückt werden.
+
+
+## Grundlegende Logik
+
+R ist eine funktionale, objektorientierte Programmiersprache für statistisches Rechnen. Mit anderen Worten, es geht um Mathematik. Es rechnet. Kaum etwas anderes. Alles, was R tut, fragt eine unendliche Folge von WAHR und FALSCH, 1 und 0. Denken Sie daran, und Sie werden typische Fehler der Sozialwissenschaften vermeiden.
+
+Regel 1: Der Computer weiß nicht, was Ihre Daten bedeuten, sondern nur, wie sie in 0 und 1 angezeigt werden können.
+
+Aufgrund dieser Regel beginnen wir nicht mit einem Datensatz, sondern lernen, wie wir künstliche Werte codieren, die wir für uns selbst erstellen.
+
+### Werte "1",1,T,F
+
+R kann eine begrenzte Menge an Informationen verstehen, hauptsächlich Werte. Es kann sie speichern, organisieren und berechnen. Nichts anderes. Es kennt 2 Hauptdatentypen (plus ein paar untergeordnete)
+
+#### Datentypen
+
+Daten haben unterschiedliche Informationsmengen. Numerische Daten sind für einen Computer am informativsten, Zeichen am wenigsten informativ. Es gibt 4 Klassen:
+  
+  Numerisch - Zahlen
+  Integer - Numerisch mit nur ganzen Zahlen (1,2,3,4)
+    Logisch – True oder False, wird als ganze Zahl behandelt
+  Zeichen - Buchstabenfolge
+  
+Alles andere, was in R-Code geschrieben wird, muss entweder eine Funktion oder ein Objekt sein.
+
+```{r}
+
+5 
+
+T
+
+F
+
+'hello, i am a string' 
+
+```
+
+#### Operations */+-^
+
+```{r}
+
+5 * 6
+
+5 + 5
+
+5 - 6
+
+3 / 2
+
+2^3
+
+```
+
+Sie können versuchen, ein Zeichen zu multiplizieren
+
+```{r}
+#'Hallo, ich bin ein String' *5
+```
+
+aber wird nicht funktionieren.
+
+
+Es wird davon ausgegangen, dass Sie über ein Objekt sprechen.
+
+### Objekte
+
+das <- 
+
+Das mit Abstand wichtigste Element von R: Der Zuweisungspfeil ermöglicht es, etwas in ein Objekt zu verwandeln, das Sie in der sogenannten Umgebung finden.
+
+Skript -> Umgebung
+--------------------
+Konsole| flexibles Fenster (Hilfe, Plot, Dateien)
+
+#### Objekte aufrufen
+
+Mit dem PFEIL können Sie der Umgebung ein Objekt zur weiteren Verwendung ZUORDNEN. Sie können ihm alle Namen geben, die keine WERTE sind.
+
+
+```{r}
+x<-3
+
+x*3
+
+```
+
+Um ein Objekt aufzurufen, verwenden Sie einfach seinen Namen.
+
+### Funktionen
+
+Klammern sind sehr wichtig in R.
+
+Was auch immer vor ihnen steht, ist eine Funktion. Was auch immer in ihnen steht, ist ein Argument.
+
+Jede Operation in R, die kein Objekt aufteilt oder eine grundlegende Operation ist, ist im Grunde eine Funktion.
+
+Es ist eigentlich wie Funktionen in der Mathematik y=f(x) macht f zu Argument x, um y zu ergeben.
+
+
+Die folgen immer der Struktur
+
+
+  name(arg1,arg2,arg3)
+
+Wenn Sie herausfinden möchten, was diese Argumente sind, verwenden Sie einfach
+
+```{r}
+?mean
+```
+
+Vom einfachen Mittelwert bis zur hierarchischen Regression oder einem API-Aufruf. Alles ist eine Funktion. 99 % der Fehler (die keine Tippfehler sind) werden dadurch verursacht, dass das falsche Objekt an eine Funktion übergeben wird.
+
+```{r}
+a<-'5'
+as.numeric(a)
+
+b<-'Hey'
+as.numeric(b)
+
+```
+
+Wie Sie sehen können, weisen wir zu
+
+
+### Objekte mit Funktionen erstellen
+
+
+Beispielsweise können Sie Werte zu einem Objekt, einem sogenannten Vektor, zusammenfassen:
+
+
+```{r}
+
+c<-5
+c<-as.character(c)
+
+```
+
+
+Wir können Werte auch mit Funktionen kombinieren
+```{r}
+c(1,2,3)
+ 
+v<-c(1,2,3)
+ 
+v<-c(3,2,1)
+
+```
+
+
+Es gibt drei grundlegende Klassen von Objekten, die Werte der einen oder anderen Art speichern können.
+
+
+#### Vektoren
+
+
+Vektoren sind elementar, da Zeilen und Zeilen in einem Datensatz Vektoren sind
+
+```{r}
+
+v*3
+
+v+2
+
+v<-c(v,3)
+```
+
+Vectors do respond to operations every value at a time. If you want to do vector math in the sense of skalar operations, there are other ways.
+
+
+
+
+Vektoren reagieren auf Operationen mit jedem Wert auf einmal. Wenn Sie Vektorrechnungen im Sinne von Skalaroperationen durchführen möchten, gibt es andere Möglichkeiten.
+
+
+
+
+#### Matrizen und Arrays
+
+Matrizen haben zwei Dimensionen und daher Koordinaten.
+```{r}
+
+ m<-matrix(nrow=3,ncol=2,c(3,4,3,4,5,6),byrow=T)
+ v1<-c(1,2,3)
+ ## adding new columns
+ m<-cbind(m,v1)
+```  
+ 
+Objekte sind keine Funktionen, können aber von Funktionen verwendet oder von Funktionen erstellt werden.
+```{r} 
+ ## adding new rows
+ m<-rbind(m,v1)
+ 
+ m1<-rbind(m,m)
+```  
+
+Vektoren oder Matrizen können nützlich sein, um Daten zu speichern, und zwar auf eine Weise, die an Datensätze erinnert. Sie sind jedoch darauf beschränkt, Daten des gleichen Typs zu enthalten, was sehr wichtig ist. Da sie Daten einer Art enthalten, können Funktionen auf alle Werte, die sie enthalten, auf die gleiche Weise angewendet werden. Wenn Sie einen Zahlenvektor mit einem einzigen Zeichen hätten, wüsste der Computer nicht, was er damit machen soll, wenn er den Mittelwert berechnen soll. Aber natürlich müssen Daten unterschiedlicher Art in einem einzigen Datenobjekt zusammengeführt werden, wir werden später lernen, wie.
+
+### Indizierung
+
+Schauen wir nun etwas tiefer in das Objekt hinein. Es gibt zwei Möglichkeiten, auf eine Variable zuzugreifen.
+
+Das ist jetzt ein bisschen seltsam im Vergleich zu Stata.
+Sie können Elemente eines beliebigen Objekts nicht anhand seiner Koordinaten aufrufen. Für eindimensionale Objekte (als Vektor) können Sie den Computer anweisen, das fünfte Element zurückzugeben.
+
+
+```{r}
+v[2]
+```
+die eckigen Klammern [] werden zum INDEXIEREN verwendet. Was auch immer in diesen Klammern steht, ist eine Koordinate innerhalb eines Objekts.
+
+Sie können dies aber auch mit Datenrahmen tun. Hier hingegen haben wir zwei Dimensionen, Zeilen und Spalten.
+
+Das [,] ist eine zweidimensionale KOORDINATE. Jede Zahl vor dem , sind Zeilen, hinter dem Komma sind Spalten.
+
+```{r}
+
+m[,1]
+m[2,]
+m[1,2]
+
+```
+In R können wir Indexoren beliebig verketten, solange wir einige Regeln einhalten.
+
+zum Beispiel können wir schreiben
+```{r}
+
+m[1,2]
+#like
+m[,2][1]
+
+```
+Lesen Sie dies wie folgt: Gehen Sie zuerst zur zweiten Spalte von m, dann zum ersten Element des Ergebnisses. Warum sollten wir das tun? Nun, in Matrizen macht es keinen Sinn, weil jede Koordinate 2 Positionen hat, die sich gegenseitig definieren. Aber Listen sind wie Bäume, nicht rechteckig.
+
+Jetzt sehen wir, dass R verwendet werden kann, um Objekte zu erstellen und zu manipulieren, die Werte enthalten. Letztlich lassen sich alle Datenoperationen darauf reduzieren. Aber um Statistiken zu machen, werden wir echte Daten einlesen wollen.
+
+## Logische Bedingungen
+
+Wie ich angedeutet habe, sind WAHR und FALSCH auch Werte. Sie sind wahrscheinlich die wichtigsten, weil implizite Indizierung und Teilmenge Ausdruck von WAHR und FALSCH sind.
+
+```{r}
+1>3
+2<1
+2==(4/2)
+```
+
+
+Ich gebe Ihnen ein einfaches Beispiel in Bezug auf unseren Lieblingsvektor.
+
+Sie können Folgendes indizieren:
+
+```{r}
+v
+v[3]
+```
+
+Wie Sie sehen können, können wir dies verwenden, um anzugeben, welche Variable und Zeile wir wollen. Aber was ist, wenn wir nach VALUE auswählen möchten?
+
+Wir können den Computer fragen: ist ein Wert von v 1? Wir verwenden die logischen Operatoren.
+
+```{r}
+v==1 # is equal?
+
+v<2 # smaller
+
+v>3 # greater
+```
+Noch besser, wir können diese beiden Arten des Umgangs mit einem Vektor kombinieren.
+
+
+```{r}
+v==1 # ist gleich?
+
+v<2 # kleiner
+
+v>3 # größer
+```
+Noch besser, wir können diese beiden Arten des Umgangs mit einem Vektor kombinieren.
+
+```{r}
+v[v==1] # ist gleich?
+
+v[v<3] # kleiner
+
+v[v>0] # größer
+```
+```{r}
+sel<-v<3
+
+sel
+
+v[sel]
+
+```
+
+
+Basierend auf dieser Logik können wir Elemente identifizieren, auf die eine Funktion, Indizierung oder eine Teilmenge angewendet werden soll.
+
+```{r}
+
+abc<-m[m[,3]==1,]
+
+```
+Was ist passiert?
+
+Wir haben mit Objekt m gesprochen
+
+  dann gesagt: Elemente zeilenweise auswählen (vor Komma)
+  
+gab dann einen logischen Ausdruck:
+m[,3]==1
+
+Sie können diese Elemente sezieren und unabhängig voneinander ausführen. Markieren Sie einfach m[,3]==1 und drücken Sie Strg+Enter!
+
+```{r}
+m[m[,3]==1 ,]
+
+```
+Der Selektor teilt dem Datenrahmen also für jede Zeile mit, ob er enthalten sein soll oder nicht.
+
+Hier haben wir eine sehr coole Funktion von R. Anstatt jedes Mal, wenn wir zurückkehren möchten, eine Teilmenge zu erstellen und neu zu laden, können wir einfach ein zusätzliches Objekt aus der Teilmenge erstellen.
+
+Sie können dies mit allem tun, was Sie als wahr/falsch ausdrücken können!
+
+```{r}
+mall<-m[,colSums(m)==nrow(m)]
+
+```
+Allerdings sind diese Zahlen noch sehr abstrakt. Am Ende ist das alles, was der Computer sieht. Aber für uns Menschen ist es schön, Informationen ohne Wert zu haben.
+
+
+## Sitzung II: Listen, Datenrahmen und Datentypen
+
+
+Hier sehen wir, dass wir die Struktur immer komplizierter machen können, wie das Speichern einer Liste in einer Liste und so weiter. So erstellen Sie komplizierte Datenstrukturen wie in relationalen Datenbanken oder xmls.
+
+```{r}
+l2<-list(v,m)
+
+str(l2)
+```
+
+Das komplizierteste Objekt für den Zugriff ist wiederum die Liste
+
+Oben haben wir eine Matrix und eine Liste in l2 gespeichert. Bringen wir sie wieder raus.
+
+
+
+```{r}
+
+str(l2)
+
+l2[1]
+
+l2[2]
+
+
+```
+Jetzt befinden wir uns auf der ersten Ebene der Liste. Aber wie kommen wir in die nächste?
+
+In R können wir Indexoren beliebig verketten, solange wir einige Regeln einhalten.
+
+zum Beispiel können wir schreiben
+```{r}
+
+m[1,2]
+#like
+m[,2][1]
+
+```
+Lesen Sie dies wie folgt: Gehen Sie zuerst zur zweiten Spalte von m, dann zum ersten Element des Ergebnisses. Warum sollten wir das tun? Nun, in Matrizen macht es keinen Sinn, weil jede Koordinate 2 Positionen hat, die sich gegenseitig definieren. Aber Listen sind wie Bäume, nicht rechteckig.
+
+
+```{r}
+
+l3<-list(l2,l2,'Barbara Bush')
+
+str(l3)
+
+```
+
+
+
+```{r}
+
+l3[3] # ist nur ein Zeichen
+
+l3[2] # ist wieder eine Liste von Listen. Kommen wir nun zu meiner Werkzeugkiste
+
+l3[1][1][2] # funktioniert nicht!
+
+```
+
+Der Grund dafür ist, dass der Computer die Liste vorher öffnen muss. Wenn Sie also in eine Liste von Listen einsteigen möchten, müssen Sie die Nummern in doppelte Klammern setzen.
+
+```{r}
+
+l3[[1]][[1]][2]
+
+```
+
+## der $-Operator
+
+Listen werden im Gegensatz zu Matrizen aus zahlreichen Objekten gebildet, die keinen Zusammenhang haben müssen. Du strukturierst sie, du kannst ihnen Namen geben.
+
+Namen sind Attribute, die wir direkt mit dem $-Operator aufrufen können. Dies ist sehr nützlich für den nächsten Schritt, seien Sie also geduldig.
+
+```{r}
+Namen (l3)
+
+Namen(l3)<-c("l2","l2","barbara")
+
+
+l3$Barbara
+
+```
+
+Da wir nun wissen, dass wir einer Liste Namen geben und alle Arten von Informationen darin speichern können, haben wir alles, was wir brauchen, um einen klassischen Datensatz mit Zeichenketten und Zahlen zu konstruieren.
+
+
+### Dataframes
+
+Datensätze werden in R als sogenannte data.frames gespeichert.
+
+Wie der Titel schon sagt, FRAMEN sie die Rohdaten in gewisser Weise. Sie fügen mehrere neue Funktionen hinzu, wie Namen. Wir werden unsere Matrix nun in einen Datenrahmen verwandeln.
+
+```{r}
+
+df<-as.data.frame(m)
+
+```
+
+Datenrahmen sind typische Datenstrukturen, wie Sie sie von Stata kennen.
+
+Normalerweise sehen Sie sich Daten an, indem Sie ihren Namen in der Konsole wie in aufrufen
+
+```{r}
+df
+```
+
+Datenrahmen sind dafür oft zu groß und unorganisiert. In Rstudio können Sie es anzeigen, indem Sie darauf klicken. Es öffnet sich ein Tab, den Sie schließen können, wenn Sie fertig sind.
+
+Wir können grundsätzlich die gleichen Indexoperationen auf data.frames anwenden wie auf Matrizen, indem wir mit ihrer zweidimensionalen Struktur sprechen.
+
+Wir können Variablen wie gewohnt extrahieren
+
+```{r}
+m4<-df[4,]
+```
+Wie Sie sehen, sehen data frames Matrizen sehr ähnlich, weisen jedoch eine Reihe von Unterscheidungsmerkmalen auf. Erstens zeigt es, dass sie nicht mehr 2 'Dimensionen' haben, sondern Beobachtungen und Variablen. Dies ist analog, aber näher am Stata-Sprechen.
+
+Sie können auch auf den kleinen blauen Pfeilpunkt davor klicken, um seine sogenannten Attribute aufzuklappen.
+
+Hier sieht man, dass es sich wirklich nicht um eine Matrix handelt, sondern um eine Liste. Listen sind das Speicherobjekt einer Programmiersprache und sie existieren in den meisten Programmiersprachen. Für den Zweck dieser Sitzung genügt es zu wissen, dass Sie in einer Liste alles Mögliche speichern können.
+
+Ein data frame ist eine Liste, während die mathematische Behandlung als Matrix tatsächlich eine spezielle Art von Liste ist, die jede Form von Daten speichern kann.
+
+Wenn Sie so wollen, ist der data.frame Daten, 
+
+
+              1 0 0 1
+              1 1 1 0
+              0 1 0 1
+
+Plus einen Bedeutungsrahmen, wie
+  Namen
+  Ebenen von Variablen (z. B. Geschlecht)
+
+
+#### Namen
+
+Der Unterschied besteht darin, dass in Stata der Variablenname ausreicht, um eine Variable anzusprechen. In R liegt das nicht daran, dass Sie viele Objekte gleichzeitig haben können. Stattdessen können wir den Computer fragen, welche Variablen sich in jedem Objekt befinden.
+
+```{r}
+
+names(df)
+
+```
+
+Wie wir hier sehen können, hat diese noch keine Namen. Lass uns das ändern
+```{r}
+names(df)<-c("Biology","Chemistry","English")
+```
+
+Mit dem $-Operator können wir auf Variablen basierend auf ihrem Namensattribut statt auf ihrem Index zugreifen.
+
+
+```{r}
+df$Biology
+
+
+
+```
+
+Wie Sie sehen, steht der $-Operator zwischen dem Objekt und dem Variablennamen. In Wirklichkeit ist der Bildschirmname nur ein Objekt innerhalb eines Objekts.
+
+
+## Neue Variablen
+
+Da wir jetzt die Möglichkeit haben, alle Arten von Informationen zu erzählen, können wir eine zusätzliche Variable hinzufügen.
+
+
+
+```{r}
+
+df$gender_num<-c(1, 0, 1, 0)
+
+```
+Aber das ist natürlich nicht wirklich der Fall. Da das Geschlecht eine kategoriale Variable ist, sollten wir es auch so behandeln. Wir codieren es in ein Zeichen um.
+
+
+Der ifelse-Befehl folgt der Logik von Argumenten und Logik
+
+ifelse(Bedingung, tue wenn wahr, tue wenn falsch)
+
+
+```{r}
+
+df$gender<-ifelse(df$gender_num==1,'Female','Male')
+
+```
+
+Markieren Sie die Bedingung, die ich geschrieben habe, und führen Sie sie unabhängig aus!
+
+
+```{r}
+df$gender_num==1
+df$gender==1
+
+```
+Bedingung ist nur ein logischer Ausdruck!
+
+Wir sehen jetzt, dass dataframes verschiedene Datentypen enthalten können! Also haben wir zum ersten Mal etwas hinzugefügt, das der Mensch als Daten interessant findet. Eine Berechnung ist damit aber natürlich nicht möglich. Wir können Daten als Zeichen speichern, aber natürlich ist es sinnvoller, wenn wir numerisches Zeug beschriften können. In R wird dieser Variablentyp Faktor genannt.
+
+### Faktoren
+Faktoren sind etwas ganz Besonderes. Sie ähneln stark den Labels, die Sie von Stata oder SPSS kennen. Obwohl sie numerisch (als ganze Zahlen) gespeichert werden, werden sie als kategoriale Variablen behandelt. Sie haben auch Attribute, die Labels genannt werden. Dies ist wieder in der Nähe von SPSS. Sie fügen also jeder Faktorstufe ein Beschriftungsattribut hinzu. 1,2 wird männlich, weiblich.
+
+Sie können Faktoren aus numerischen machen; aber Sie müssen natürlich die zusätzliche Interpretation bereitstellen.
+```{r}
+
+df$Gender<-factor(df$gender_num,labels=c('Male','Female'))
+               
+```
+
+Sie können auch direkt vom Geschlecht in Zeichenform mit as.factor gehen. Sie sehen, es nimmt die Ausdrücke, die wir in der Zeichenfolge verwendet haben, und verwendet sie als Ebenen.
+```{r}
+
+df$Geschlecht<-as.factor(df$Geschlecht)
+
+```
+
+## Termine
+
+Datumsvariablen haben sehr nützliche Attribute.
+
+```{r}
+
+df$Geburtsdatum<-c("2000-01-01","1997-02-15","1995-01-07","2003-11-01")
+
+df$birthdate<-as.Date(df$birthdate)
+
+df[df$Geburtsdatum>"2003-01-01",]
+
+```
+
+Für mehr können Sie lubridate verwenden!
