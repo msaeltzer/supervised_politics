@@ -1,0 +1,453 @@
+---
+title: "Supervised Classification"
+author: "Marius Sältzer"
+date: "14 11 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(quanteda)
+library(caret)
+```
+
+Ein Textmodell ist eine „Vereinfachung“ von Text. Es ermöglicht dem Computer, die wichtigsten Merkmale in der menschlichen Sprache für eine bestimmte Aufgabe zu finden. Mit anderen Worten, er möchte die wichtigen FEATURES (in diesem Fall Wörter) finden, die es ihm ermöglichen, diese Aufgabe zu lösen.
+
+
+Um Salienz oder Agenden zu messen, müssen wir herausfinden, worum es in einem Text geht. Die Antwort kann kompliziert und vielschichtig sein, da es davon abhängt, welche Unterschiede für Ihre Frage wichtig sind. Normalerweise können wir dies herausfinden, indem wir es lesen. Zum Beispiel lesen wir einen Nachrichtenartikel.
+Wir können seinen Titel, seine Hauptbotschaft und sein allgemeines Thema extrahieren. Wie machen wir das? Wir verbinden bestimmte Wörter mit bestimmten Themen. Aber das ist natürlich keine Selbstverständlichkeit.
+Wie können wir einem Text entnehmen, worum es geht?
+
+
+
+Diese Aufgabe besteht darin, Text zu kategorisieren. Ein Modell macht Vorhersagen für jeden Text, in welche Kategorie er fällt. Wenn Sie 2 Kategorien haben, wird es versuchen, jeden Text in diese 2 Kategorien einzuordnen. Um dem Computer beizubringen, wie das geht, müssen wir ihn TRAINIEREN. Training bedeutet, dass wir Daten in ein Modell einspeisen, das dann mit der Bewertung von Merkmalen beginnt. Es versucht GEWICHTE für die Merkmale zu finden.
+
+Wir geben den Computern Kategorien für bestehenden Text: Wir nennen sie LABELS. Diese Etiketten sind exogen und müssen von Hand codiert werden. Das macht ein Testmodell "überwacht" oder SUPERVISED.
+
+
+```{r}
+
+source("./tools.R")
+load("data/main_dfm.rdata")
+```
+
+
+# Maschinelles Lernen
+
+Nachdem wir in der vorherigen Sitzung gelernt haben, wie Text als Daten dargestellt wird, beginnen wir mit der Arbeit mit DFMs. Wir werden uns jetzt langsam in Richtung maschinelles Lernen bewegen.
+
+## Eine kurze Geschichte der Textanalyse in der Politikwissenschaft
+
+Wie ich bereits erwähnte, begannen große Projekte der Korpusanalyse in Form des Manifesto-Projekts, bei dem zum ersten Mal die manuelle Kodierung politischer Themen in großem Umfang angewendet wurde. Obwohl dieser Datensatz wichtig war, zog er schnell Wissenschaftler an, die versuchten, einen günstigeren Weg zu finden, um die gleichen Ergebnisse zu erzielen. Laver & Gerry 2001 orientierten sich an Wörterbuchansätzen, um von der Inhaltsanalyse zur AUTOMATISIERTEN Inhaltsanalyse überzugehen. Technisch gesehen sind dies derzeit im Kurs. Die Gruppe um Ken Benoit stellte Methoden vor, die wir heute als maschinelles Lernen bezeichnen würden, unter Verwendung von Wordscores, als halbüberwachte Methoden, und Proksch/Slapin, die erstmals einen echten maschinellen Lernansatz in der Politikwissenschaft einsetzten. Gleichzeitig stellten Justin Grimmer und Brandon Stewart Themenmodelle in der amerikanischen Literatur vor. Heute konzentriere ich mich auf diese Modelle, mit einem modernen Twist.
+
+Grundsätzlich gibt es 4 Arten:
+
+
+  ## Unbeaufsichtigt
+  
+  Identifizieren dominanter Strukturen und Muster in Daten
+
+  ## Halb überwacht
+  
+  Erlernen exogener Strukturen, um entsprechende Muster zu erkennen
+  
+  ## Betreut
+
+  „Minimal Supervision“: Minimaler exogener Input, um spezifische Muster zu identifizieren
+
+  ## (Reinforcement): Lernen durch abstrakte Ziele (nicht in der Textanalyse)
+
+
+
+## Überwachte Klassifizierung
+
+Nachdem wir gelernt haben, wie man Daten für die Textanalyse aufbereitet und ein sehr einfaches Wörterbuch anwendet, werden wir heute lernen, wie man Text mithilfe von vorbeschrifteten Daten automatisch klassifiziert. Dies ist eine wichtige Unterscheidung.
+
+
+Wir verwenden von Menschen codierte LABELS, um ein MODELL ZU TRAINIEREN.
+
+
+```{r}
+
+man<-read.csv("data/manifesto.csv",encoding = "UTF-8")
+
+```
+
+
+```{r}
+
+cb<-cb[cb$code<100,]
+table(pred)
+man<-merge(cb,man,by.y="cap_topic",by.x="code")
+```
+
+
+
+```{r}
+corp<-corpus(man$sentence_text,docvars = man)
+
+ft<-tokens(corp,remove_punct=T,
+           remove_numbers = T,
+           remove_url = T, 
+           split_hyphens = T,
+           remove_symbols = T)
+
+```
+
+     
+     
+     
+### Überwachtes Lernen im Allgemeinen
+
+Bevor wir über ML in der Textanalyse sprechen, lassen Sie uns zunächst diskutieren, wie sich überwachtes Lernen auf Dinge bezieht, die Sie vielleicht bereits wissen. Die meisten von Ihnen werden viel Erfahrung mit statistischen Verfahren wie linearen Regressionen haben.
+
+Mathematisch gesehen passen Sie ein Modell an, um den Abstand zwischen Ihren Vorhersagen und den beobachteten Werten zu minimieren. Mit anderen Worten, Sie optimieren die Parameter eines Modells, um es an die Daten anzupassen. Auf diese Weise können Sie Hypothesen über die Wirkung einer Variablen auf eine andere testen.
+
+Lassen Sie uns nun über eine andere Aufgabe nachdenken: die Klassifizierung. Im Gegensatz zur Regression versuchen wir nicht, die Wirkung von etwas (oder die Korrelation) abzuschätzen, sondern wir versuchen, die allgemeine Anpassung des Modells so eng wie möglich zu machen. Wir wollen die Koeffizienten lernen, um die Entstehung von Y so gut wie möglich zu verstehen, um Vorhersagen darüber treffen zu können. Wir bewegen uns nun von einem x-zentrierten Modell zu einem y-zentrierten Modell. Anstatt einen korrekten Wert zu finden, versuchen wir, R^2 zu maximieren.
+
+Aber mit der Änderung des Ziels ergeben sich natürlich andere Probleme. Vorhersage bedeutet, auf das Unbekannte zu schließen, sei es in der Zukunft oder gerade außerhalb unseres Bereichs. Während also Regressionen zur Messung des in einem Datensatz vorhandenen Effekts der richtige Weg sind, könnte es problematisch sein, aus dem, was wir gelernt haben, auf etwas anderes zu schließen. Wenn wir also die Anpassung an gegebene Daten maximieren, wie können wir dann auf unsichtbare Daten schließen? Woher wissen wir, dass unser Modell nicht nur eine Besonderheit sieht, also nur in unseren Daten, aber nicht in zukünftigen Daten?
+
+
+
+### Trainings-/Testaufteilung
+
+Damit Vorhersagen funktionieren, müssen wir unbekannte Daten simulieren, von denen wir die richtigen Ergebnisse kennen. Mit anderen Worten, wir nehmen unserem Modell etwas weg und lassen es nicht sehen, um es dann vorherzusagen. Diese Trainings-/Validierungsaufteilung ist eines der überzeugendsten Argumente für überwachtes Lernen, da sie es uns ermöglicht, das Modell direkt zu validieren. Dazu müssen wir die Datenmenge, die ein Modell lernen darf, etwas reduzieren. Wenn Sie also 20.000 codierte Texte haben, trainieren oder modellieren wir auf nur 15 k.
+
+Dazu nehmen wir eine zufällige Aufteilung vor und nehmen 75 % als Trainings- und 25 % als Testdaten.
+```{r}
+
+
+id_train <- sample(1:nrow(man), round(nrow(man)/4,0), replace = FALSE)
+
+
+docvars(ft,"id_numeric") <- 1:ndoc(ft)
+
+# get training set
+dfmat_training <- dfm(tokens_subset(ft, !id_numeric %in% id_train))
+
+# get test set 
+dfmat_test <- dfm(tokens_subset(ft,  id_numeric %in% id_train))
+
+
+```
+## Trainingsmodelle
+
+Wir trainieren das Modell, indem wir ihm nur zwei Dinge zeigen: einen Text und eine Bezeichnung, zu welcher Kategorie der Text gehört. Dann lassen wir das Modell Schlüsse aus den Mustern ziehen, die es in den Daten findet. Diesen Prozess haben alle Modelle des überwachten maschinellen Lernens gemeinsam.
+
+Wie bei einer Regressionsanalyse passen wir ein Modell Y ~ ß*X an, wobei X die Daten, Y die Bezeichnung und ß die Koeffizienten sind, mit denen das Modell in Zukunft umzugehen lernt. Nachdem das Modell gelernt hat, kann es an ein neues X angepasst werden, um ein neues Y vorherzusagen.
+
+In der Terminologie des maschinellen Lernens heißt DV Y LABELS, die Variablen heißen FEATURES und die Koeffizienten heißen WEIGHTS. Wie Sie sehen werden, greifen alle ML-Modelle grundsätzlich auf diese Kombination von Konzepten zurück, unterscheiden sich aber nur
+
+        Welche Merkmale werden wir integrieren?
+              NGRAMS
+              Sequenzen
+        
+         Wie wir sie kombinieren:
+              Worteinbettungen
+              Externe Informationen (vortrainierte Einbettungen)
+              
+          Wie passen wir die Daten an:
+              Maximale Wahrscheinlichkeit (Logistische Regressionen)
+              Bayes-Regel (Naive Bayes)
+              Backpropagation (Neuronale Netze)
+         
+         
+
+
+
+##
+
+
+
+
+## A simple supervised classifier
+
+
+
+
+## Naive Bayes
+
+Naive Bayes wird naive Bayes genannt, weil es die Bayes-Regel der vorherigen Dichte * neue Daten = spätere Dichte auf eine Menge Wörter anwendet. Im Gegensatz zur logistischen Regression, die ein diskriminatives Modell ist, ist NB ein generatives Textmodell (es baut ein Konzept der Kategorie auf).
+
+
+Das Anpassen des naiven Bayes-Modells ist einfach: Wir teilen dem Computer mit, auf welchem dfm er lernen soll, basierend auf welcher Label-Variablen
+
+Grundsätzlich lernt das Modell, welche Wörter in einer bestimmten Kategorie häufiger vorkommen. Basierend auf diesen Wörtern lernt es, wie ein bestimmtes Wort mit größerer Wahrscheinlichkeit in einer bestimmten Kategorie vorkommt.
+
+
+Nun, welche Wörter weisen auf ein bestimmtes Thema hin, z. B. Umwelt.
+```{r}
+library(quanteda.textmodels)
+  lr1<-textmodel_nb(dfmat_training,y=dfmat_training$cat)
+  
+
+```
+
+
+
+
+```{r}
+features<-as.data.frame(t(lr1$param))
+m1<-rowMeans(features)
+features<-features/m1
+features<-features[order(features$Environment,decreasing = T),]
+rownames(features)[1:30]
+```
+
+
+
+
+Nachdem wir ein Modell TRAINIEREN, wollen wir herausfinden, wie es abschneidet: Als Nächstes ERGEBEN wir die Klassen VORHERSAGE und prüfen, wie gut das Modell abschneidet.
+
+
+## An neue Daten anpassen
+
+Sie möchten, dass Ihr Modell verallgemeinert, also möchten Sie es auf seine Fähigkeit auswerten, UNGESEHENE, aber vergleichbare Daten vorherzusagen. Wir validieren es daher auf dem VALIDATION-Set.
+
+Dazu müssen wir sicherstellen, dass die neuen Daten die gleichen Merkmale wie das Trainingsset haben. Dies ist besonders problematisch in der Textanalyse. Während Sie in einem Regressionssatz nach dem Aufteilen wahrscheinlich alle Variablen in beiden Sätzen haben werden, ist dies in SPARSE-dfms viel problematischer. Es könnten Begriffe nur in den Trainingsdaten verwendet werden, oder es könnten neue Begriffe nur in der Testmenge vorhanden sein. Auf Letzteres können wir keine Rückschlüsse ziehen und Ersteres nicht verwenden. Das ist das OUT-OF-VOCABULARY-Problem. Wir gleichen daher Trainingsdaten und Testdaten ab und entfernen Merkmale, die nicht in beiden enthalten sind.
+```{r}
+
+dfmat_matched <- dfm_match(dfmat_test, features = featnames(dfmat_training))
+
+pred <- predict(lr1, dfmat_matched, type = "class")
+
+actual<-dfmat_matched$cat
+
+t1<-table(pred,actual)
+
+caret::confusionMatrix(t1)
+```
+
+
+
+
+## Jetzt: Unsupervised
+
+
+Ziel: Finden Sie die wichtigsten Dimensionen
+
+
+Methoden:
+  
+  Dimensionsreduktion
+  
+  Clustering
+  
+  Textanalyse: Dokumentenähnlichkeit
+  
+  
+Anwendungen:
+
+  Daten Beschreibung
+  
+  Muster in riesigen Datenmengen finden
+
+  Analysieren von unbeschriftetem Text
+  
+
+
+
+## Themenmodelle
+
+Topic Models oder Themenmodelle sind eine typische Methode, um unbekannte Texte zu klassifizieren. Algorithmen dieser Art erlauben es, natürliche "cluster" von Texten zu bilden, basierend auf relativen Worthäufigkeiten. Texte, die überproportional ähnlichere Worte beinhalten, werden als ähnlicher verstanden. 
+
+
+Die Bezeichung "Themenmodell" spricht direkt zu der Anwendung in diesen Daten, da es sich um das Auffinden von Issues handelt. Dies ist jedoch etwas falsch. Themenmodelle basieren auf der Idee, dass der Datengenerierende Prozess, also wie dieser spezielle Corpus zu Stande kommt, einer bestimmten Anzahl von "Genres" entstammen, die es zu finden gilt. 
+
+
+
+  
+### Wörter gruppieren
+  
+  Typischerweise sind bestimmte Wörter gute Indikatoren für Themen. Einige Wörter werden in jedem Kontext verwendet, während andere nur in bestimmten Themenbereichen verwendet werden. Zum Beispiel sind die Wörter "und" "oder" usw. in der englischen Sprache üblich und existieren in jedem Kontext. Andere Wörter wie „Klima“, „Budget“ oder „Waffe“ sind spezifisch für eine kleinere Anzahl von Themenbereichen.
+
+Dieses Grundkonzept wird in der Idee des Umkehrbegriffs Frequenz verstanden. Jedes Wort hat eine Verwendungsverteilung in einer Sprache und in einem Thema. Dementsprechend können wir auf die Zugehörigkeit eines Begriffs zu einem Thema schließen, wenn er eher in einem Thema vorkommt als in der Allgemeinsprache.
+
+Das alles kennen wir vom überwachten Scaling. Hier wissen wir, dass es Kategorien gibt, in die Wörter passen. Allerdings ändern wir jetzt etwas: Wir können die Kategorien, in die Wörter gehören, nicht beobachten, stattdessen wissen wir nur zwei Dinge.
+
+1) In welchem Dokument sich ein Wort befindet
+2) Welche anderen Wörter sind in diesem Dokument enthalten?
+
+Wir werden daher Kategorien erstellen, indem wir nach Wortclustern suchen, die überproportional häufig zusammen in demselben Dokument vorkommen.
+
+
+## Ein erster Eindruck von LDA
+
+
+Ein Clustering-Algorithmus für Wörter!
+  
+  Nun zurück zur Frage der "Themen". Wie können wir herausfinden, zu welchem Thema ein bestimmter Text gehört? Wie wir oben gesehen haben, verwenden verschiedene Zeitungsartikel über verschiedene Dinge unterschiedliche Wörter, und wir haben die Daten so aufbereitet, dass wir die Wörter jetzt „zählen“ und kategorisieren können.
+
+Die Idee ist einfach: Text wird basierend auf zugrunde liegenden latenten "Themen" generiert und ordnet Wörter entsprechend zu. Um zu verstehen, welches Thema ein Text hat, müssen wir verstehen, wie der Text aus Themen generiert wurde.
+
+
+
+##LDA
+
+
+Dazu verwenden wir den am weitesten verbreiteten Algorithmus für Themenmodelle, LDA
+
+
+Arten von Themenmodellen:
+  
+  
+  Single-Member versus Multi-Member
+
+
+Klassiker: Latente Derichlet-Allokation
+
+Latent = Themen sind zugrunde liegende Mechanismen, die Text generieren
+
+Derichlet =  Bayesianische Version einer Multinominalen Verteilung (conjugate prior)
+
+Allocation = Ordnet jedem Text ein "Thema" zu
+
+
+
+
+Vereinfacht kann man sich das so vorstellen: Anfangs bekommen alle Texte eine zufälligen Klasse aus K vorgegebenen Klassen. Dieses K bestimmen wir. Wir nehmen also an, dass die Texte aus K Themen generiert wurden. Entsprechend erzeugen wir einen K-Dimensionalen Raum, so dass jeder Text irgendwo zwischen diese K Pole fällt. Bei k=3 wäre das zum Beispiel ein Dreick, und jeder Text wird in diesem Dreieck platziert, mit einer bestimmten Distanz zu jedem der drei Pole. 
+
+Nun hat jeder dieser Pole Wortgewichte. Die Texte, die an diesen Endpunkten liegen, sind wie "magneten" und jeder Text, der ihnen ähnlich ist, wird in Richtung dieser Pole gezogen. Anfangs sind das häufige Worte wie "das" oder "die". Doch dadurch, dass diese Begriffe in allen drei Polen vorkommen werden, sind diese nicht sehr "diskriminierend". Daher werden die Modelle andere Begriffe relevant finden. 
+
+Auf diese Weise werden ähnliche Texte an die entsprechenden Enden bewegt, und mit der Zeit werden andere Worte wichtiger, nämlich diejenigen, die uns mehr über das "Thema" sagen. Auf diese Weise werden die Texte solange im Dreick "herumsortiert", bis das Modell keine besseren Orte mehr findet. Dies nennen wir "Konvergenz", das heist der Prozess der Verbesserung ist abgeschlossen. 
+
+
+
+
+Anstelle von LDA verwenden wir das viel schnellere STM-Paket, das eine schöne Anzahl zusätzlicher Diagnosetools enthält
+
+
+
+
+
+
+
+
+
+```{r}
+
+library(stm)
+dfc<-dfm_trim(dfc_res,max_termfreq = .99,termfreq_type = "quantile",verbose = T)
+
+dfc<-dfm_trim(dfc_res,min_termfreq = .8,termfreq_type = "quantile",verbose = T)
+
+dfc<-dfm_select(dfc,pattern=c(stopwords("de"),"dass"),selection='remove')
+
+df_stm2<-convert(dfc,to="stm")
+```
+Um ein Themenmodell auszuführen, müssen Sie nur die DFM-Datei und die Anzahl der angenommenen Themen bereitstellen. Dies kann einige Zeit dauern!
+
+Wie funktioniert es? Wir teilen dem Computer mit, wie viele Themen ein Korpus enthält. Er berechnet die Wahrscheinlichkeit, dass jedes Dokument von jedem Thema generiert wird, d.h. wir erhalten eine Punktzahl für jedes Dokument x Thema, genau wie in SL.
+
+Die überwachte Klassifizierung verwendet einen harten Prior, lernt Begriffe und wendet sie dann auf neuen Text an. Die unüberwachte Klassifizierung hingegen verwendet einen nicht informativen Prior und geht davon aus, dass jedes Dokument zu einer zufälligen Auswahl von k Kategorien gehört.
+
+Dann überprüft es jedes Wort auf zwei Dinge: erstens, in welchem Dokument es vorkommt und zweitens, welche Themen in dem Dokument vorkommen. Basierend auf diesen empirischen Beobachtungen können wir nun das „Thema“ des Wortes ändern. Wie gesagt, wir beginnen mit einer zufälligen Verteilung.
+
+Wenn wir diesen Vorgang immer wieder wiederholen, werden Wörter, die in Dokumenten vorkommen, die dieselben Wörter enthalten, einem Thema zugeordnet. Indem wir mit einer zufälligen Verteilung beginnen und die Beziehung zwischen Thema zu Wörtern und Dokumenten "umgestalten", bündeln wir Wörter, die nebeneinander vorkommen.
+
+Das ist auch der Grund, warum das so lange dauert ;)
+
+
+Versuchen wir also zuerst, dies auf alle unsere Daten anzuwenden ...
+
+```{r}
+
+fit2 <- stm(df_stm2$documents, # the documents
+            df_stm2$vocab, # the words
+            K = 20, # 50 topics
+            max.em.its = 20,
+            # set to run for a maximum of 100 EM iterations
+            data = df_stm2$meta, # all the variables (we're not actually including any predictors in this model, though)
+            init.type = "Spectral")  # uses some sort of svd
+
+save(fit2,file="stm2.rdata")
+```
+  
+
+  
+
+```{r, fig.height=12}
+
+plot.STM(fit2)
+
+```
+
+  
+```{r}
+pred<-max.col(fit2$theta)
+dim(pred)
+tops<-cbind(df_stm2$meta,pred)
+
+```
+
+
+```{r}
+
+table(tops$pred,tops$cap_topic)
+```
+
+  
+  
+  FALLS die Anzahl unserer Themen stimmt und die Themen durch Worthäufigkeiten gut repräsentiert sind, erhalten wir durch ein Topic Model die besten Cluster. Aber das ist ein großes "FALLS". In der Realität sind die Gruppen der Themen unterschiedlich groß, die Wortähnlichkeiten nicht hoch genug, oder seltene Worte ohne besondere Bedeutung dominieren die Clusterbildung. Wir können nicht genau wissen, ob die Cluster die wir bilden wirklich unserer Vorstellung eines Themas ensprechen.
+
+
+
+  
+## Themenmodelle validieren
+ Da Themenmodelle unüberwachte Modelle sind, ist die Validierung der wichtigste Schritt. Wie viele Forscher argumentieren, ist es hauptsächlich eine "Leseunterstützung" und wenig mehr. Es gibt zwei Hauptprobleme, die alle auf der Anzahl der von uns ausgewählten Themen basieren: Sind Themen, die tatsächlich unterschiedlich sind, in derselben Kategorie zusammengefasst? Oder sind Themen über mehrere Kategorien verteilt? Haben wir zu viele Themen gewählt oder zu wenige? Sind die Themen so unausgewogen, dass der Computer zahlreiche Unterthemen von, sagen wir, Migration aufgegriffen hat, aber nur ein Thema von Außenpolitik? Sind Außenpolitik und Migration zu einem Thema zusammengefasst?
+
+Um diese Fragen zu beantworten, müssen wir die Ergebnisse sorgfältig untersuchen.
+
+Der zentrale Grund, warum Themenmodelle und Korrespondenzanalyse keine Themen oder Dimensionen von Interesse für den Datensatz wiedergewinnen, ist, dass die Auflösungen über politische Themen hinaus oft geospezifisch sind.
+
+
+
+
+## Transfer 
+
+
+Was wäre nun, wenn wir die Worte, die wir aus dem anderen Modell gelernt haben, auf den Twitter Corpus übertragen würden?
+
+
+
+```{r}
+load("data/sample.rdata")
+```
+
+```{r}
+c1<-tokens(corpus(val$tweets,docvars=val),remove_punct = T,remove_symbols = T,remove_url = T)
+dfmat_test<-dfm(c1)
+```
+
+
+
+
+Schauen wir mal wie es auf den ungesehenen Daten performed
+```{r}
+
+dfmat_matched <- dfm_match(dfmat_test, features = featnames(dfmat_training))
+```
+
+```{r}
+
+names(val)
+
+pred <- predict(lr1, dfmat_matched, type = "class")
+
+
+actual<-factor(dfmat_matched$Issuedomain)
+
+t1<-table(pred,actual)
+
+caret::confusionMatrix(t1)
+```
+
+
+
+
+
+
+
