@@ -16,30 +16,21 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Herzlich Willkommen zum Workshop "Quantitative Inhaltsanalyse in R".
 
-Wir werden heute einen weiten Weg gehen von den Wurzeln der Sozialwissenschaft bis in neuest Entwicklungen unter dem Einfluss künstlicher Intelligenz. 
-
+Wir werden heute einen weiten Weg gehen von den Ursrprüngen der Sozialwissenschaft bis in neueste Entwicklungen unter dem Einfluss künstlicher Intelligenz. 
 
 Die Textanalyse ist eine der ältesten Methoden der Sozialwissenschaften: Das Lesen und Interpretieren von gesprochener oder geschriebener Sprache ist eine Grundmethode in Politikwissenschaft, Kommunikationswissenschaft und Soziologie. Reden, Wahlprogramme, Nachrichtenartikel oder Social-Media-Beiträge wurden alle einer Inhaltsanalyse unterzogen. Allerdings waren diese Methoden immer in ihrer Reichweite begrenzt, da die Anzahl der von den Forschern zu lesenden und zu vergleichenden Texte im Gegensatz zu der schieren Menge an Text, die im sozialen Bereich generiert wird, stark begrenzt ist.
 
 Um diese Probleme anzugehen, haben Informatik und Linguistik Methoden entwickelt, um mit dieser Datenmenge umzugehen. Die Sozialwissenschaften haben sich im Laufe des 21. Jahrhunderts langsam angepasst. Es wurde verwendet, um verschiedene Dimensionen von Text zu identifizieren, wie z. B. Thema, Rahmen, Stile oder spezifischere Dimensionen wie "Ideologie" oder "Populismus".
 
-Ein zentrales Anliegen bei der Beantwortung von Forschungsfragen unter Verwendung von Text als Daten ist die Verbindung latenter Konzepte mit ihren Manifestationen im Text. Darum soll es in diesem Kurs gehen. Es stellt Werkzeuge vor, um herauszufinden, was für Forscher in einem beliebigen Textkorpus interessant ist. Es ist zentral, die Grenzen dieses Ansatzes zu betrachten.
+Ein zentrales Anliegen bei der Beantwortung von Forschungsfragen unter Verwendung von Text als Daten, ist die Verbindung latenter Konzepte mit ihren Manifestationen im Text. 
 
-Es kann die Ähnlichkeit von Körpern natürlicher Sprache messen. Die Methoden der Textanalyse unterscheiden sich darin, welche Art von Ähnlichkeit wir beobachten können. Es ist Sache des Forschers, einen Weg zu finden, die Art der Ähnlichkeit zu wählen, die für seine Forschungsfrage sinnvoll ist.
 
-Diese Ähnlichkeit kann explorativ (Auffinden der offensichtlichsten Unterschiede und Ähnlichkeiten) oder spezifisch (Auffinden einer bestimmten Dimension der Ähnlichkeit) sein. Mit anderen Worten, die automatisierte Textanalyse kann eine ZUVERLÄSSIGE Möglichkeit bieten, Ähnlichkeiten zu beobachten, aber es liegt am Forscher, sie zu einem VALIDEN Maß für das Konzept zu machen, an dem er interessiert ist.
- 
-Um diese Methoden anwenden zu können, müssen wir zunächst aus Text quantitativ auswertbare Daten machen: Der erste Abschnitt dieses Kurses beschäftigt sich mit der Frage, wie wir aus einer Buchstabenfolge bedeutungstragende Zahlen machen können. Wir lernen die obskure Kunst der TEXTDARSTELLUNG.
+Um diese Methoden anwenden zu können, müssen wir zunächst aus Text quantitativ auswertbare Daten machen: Im ersten Abschnitt lernen wir die Grundlagen der Open Source Porgrammiersprache R.
 
-Der zweite Teil dieses Kurses zeigt Methoden auf, die die statistisch wichtigsten Ähnlichkeiten mithilfe von UNSUPERVISED LEARNING identifizieren.
+Der zweite Abschnitt dieses Kurses beschäftigt sich mit der Frage, wie wir aus einer Buchstabenfolge bedeutungstragende Zahlen machen können. Wir lernen die obskure Kunst der TEXTDARSTELLUNG.
 
-Der dritte Teil dieses Kurses stellt Methoden vor, die mithilfe von SUPERVISED LEARNING interessierende Dimensionen für Text vordefinieren.
+Der dritte Teil dieses Kurses stellt Methoden vor, die mithilfe von MASCHINELLEM LERNEN erlauben, Texte automatisch zu klassifizieren.
 
-Block 1: Einführung in R (60)
-Block 2: Manuelle Inhaltsanalyse (30 Min + 20 Minuten Annotationsaufgabe)
-Block 3: Sprache in Zahlen (30 Minuten) 
-Block 4: Exploration (45 Minuten)
-Block 5: Betreutes Lernen ;) (60 Minuten)
 
 
 
@@ -782,7 +773,7 @@ df$Geschlecht<-as.factor(df$Geschlecht)
 
 ```
 
-## Termine
+## Zeit
 
 Datumsvariablen haben sehr nützliche Attribute.
 
@@ -797,3 +788,15 @@ df[df$Geburtsdatum>"2003-01-01",]
 ```
 
 Für mehr können Sie lubridate verwenden!
+
+
+## Übung
+
+Öffnen Sie jetzt den Unterordner "Problem Sets"
+ 
+
+
+
+
+
+

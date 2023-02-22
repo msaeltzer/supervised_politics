@@ -19,11 +19,14 @@ Ein Textmodell ist eine „Vereinfachung“ von Text. Es ermöglicht dem Compute
 
 Um Salienz oder Agenden zu messen, müssen wir herausfinden, worum es in einem Text geht. Die Antwort kann kompliziert und vielschichtig sein, da es davon abhängt, welche Unterschiede für Ihre Frage wichtig sind. Normalerweise können wir dies herausfinden, indem wir es lesen. Zum Beispiel lesen wir einen Nachrichtenartikel.
 Wir können seinen Titel, seine Hauptbotschaft und sein allgemeines Thema extrahieren. Wie machen wir das? Wir verbinden bestimmte Wörter mit bestimmten Themen. Aber das ist natürlich keine Selbstverständlichkeit.
-Wie können wir einem Text entnehmen, worum es geht?
 
 
+Um dies zu lösen, messen wir die Ähnlichkeit von Texten zueinander. Die Methoden der Textanalyse unterscheiden sich darin, welche Art von Ähnlichkeit wir beobachten können. Es ist Sache des Forschers, einen Weg zu finden, die Art der Ähnlichkeit zu wählen, die für seine Forschungsfrage sinnvoll ist.
 
-Diese Aufgabe besteht darin, Text zu kategorisieren. Ein Modell macht Vorhersagen für jeden Text, in welche Kategorie er fällt. Wenn Sie 2 Kategorien haben, wird es versuchen, jeden Text in diese 2 Kategorien einzuordnen. Um dem Computer beizubringen, wie das geht, müssen wir ihn TRAINIEREN. Training bedeutet, dass wir Daten in ein Modell einspeisen, das dann mit der Bewertung von Merkmalen beginnt. Es versucht GEWICHTE für die Merkmale zu finden.
+Diese Ähnlichkeit kann explorativ (Auffinden der offensichtlichsten Unterschiede und Ähnlichkeiten) oder spezifisch (Auffinden einer bestimmten Dimension der Ähnlichkeit) sein. Mit anderen Worten, die automatisierte Textanalyse kann eine ZUVERLÄSSIGE Möglichkeit bieten, Ähnlichkeiten zu beobachten, aber es liegt am Forscher, sie zu einem VALIDEN Maß für das Konzept zu machen, an dem er interessiert ist.
+ 
+ 
+In unserem Fall ist dieses Konzept die thematische Kategorie. Ein Modell lernt und macht Vorhersagen für jeden Text, in welche Kategorie er fällt. Wenn Sie 2 Kategorien haben, wird es versuchen, jeden Text in diese 2 Kategorien einzuordnen. Um dem Computer beizubringen, wie das geht, müssen wir ihn TRAINIEREN. Training bedeutet, dass wir Daten in ein Modell einspeisen, das dann mit der Bewertung von Merkmalen beginnt. Es versucht GEWICHTE für die Merkmale zu finden.
 
 Wir geben den Computern Kategorien für bestehenden Text: Wir nennen sie LABELS. Diese Etiketten sind exogen und müssen von Hand codiert werden. Das macht ein Testmodell "überwacht" oder SUPERVISED.
 
@@ -41,22 +44,21 @@ Nachdem wir in der vorherigen Sitzung gelernt haben, wie Text als Daten dargeste
 
 ## Eine kurze Geschichte der Textanalyse in der Politikwissenschaft
 
-Wie ich bereits erwähnte, begannen große Projekte der Korpusanalyse in Form des Manifesto-Projekts, bei dem zum ersten Mal die manuelle Kodierung politischer Themen in großem Umfang angewendet wurde. Obwohl dieser Datensatz wichtig war, zog er schnell Wissenschaftler an, die versuchten, einen günstigeren Weg zu finden, um die gleichen Ergebnisse zu erzielen. Laver & Gerry 2001 orientierten sich an Wörterbuchansätzen, um von der Inhaltsanalyse zur AUTOMATISIERTEN Inhaltsanalyse überzugehen. Technisch gesehen sind dies derzeit im Kurs. Die Gruppe um Ken Benoit stellte Methoden vor, die wir heute als maschinelles Lernen bezeichnen würden, unter Verwendung von Wordscores, als halbüberwachte Methoden, und Proksch/Slapin, die erstmals einen echten maschinellen Lernansatz in der Politikwissenschaft einsetzten. Gleichzeitig stellten Justin Grimmer und Brandon Stewart Themenmodelle in der amerikanischen Literatur vor. Heute konzentriere ich mich auf diese Modelle, mit einem modernen Twist.
+Wie bereits erwähnt, begannen große Projekte der Korpusanalyse in Form des Manifesto-Projekts, bei dem zum ersten Mal die manuelle Kodierung politischer Themen in großem Umfang angewendet wurde. Obwohl dieser Datensatz wichtig war, zog er schnell Wissenschaftler an, die versuchten, einen günstigeren Weg zu finden, um die gleichen Ergebnisse zu erzielen. Laver & Gerry 2001 orientierten sich an Wörterbuchansätzen, um von der Inhaltsanalyse zur AUTOMATISIERTEN Inhaltsanalyse überzugehen. Technisch gesehen sind dies derzeit im Kurs. Die Gruppe um Ken Benoit stellte Methoden vor, die wir heute als maschinelles Lernen bezeichnen würden, unter Verwendung von Wordscores, als halbüberwachte Methoden, und Proksch/Slapin, die erstmals einen echten maschinellen Lernansatz in der Politikwissenschaft einsetzten. Gleichzeitig stellten Justin Grimmer und Brandon Stewart Themenmodelle in der amerikanischen Literatur vor. Heute konzentriere ich mich auf diese Modelle, mit einem modernen Twist.
 
 Grundsätzlich gibt es 4 Arten:
 
-
-  ## Unbeaufsichtigt
+  ## Unüberwacht (UNSUPERVISED)
   
   Identifizieren dominanter Strukturen und Muster in Daten
 
-  ## Halb überwacht
+  ## Halb überwacht (SEMISUPERVISED)
   
   Erlernen exogener Strukturen, um entsprechende Muster zu erkennen
   
-  ## Betreut
+  ## Überwacht (SUPERVISED)
 
-  „Minimal Supervision“: Minimaler exogener Input, um spezifische Muster zu identifizieren
+  „Minimal Supervision“: Modelle lernen aus Beispielen
 
   ## (Reinforcement): Lernen durch abstrakte Ziele (nicht in der Textanalyse)
 
@@ -64,7 +66,7 @@ Grundsätzlich gibt es 4 Arten:
 
 ## Überwachte Klassifizierung
 
-Nachdem wir gelernt haben, wie man Daten für die Textanalyse aufbereitet und ein sehr einfaches Wörterbuch anwendet, werden wir heute lernen, wie man Text mithilfe von vorbeschrifteten Daten automatisch klassifiziert. Dies ist eine wichtige Unterscheidung.
+Nachdem wir gelernt haben, wie man Daten für die Textanalyse aufbereitet werden wir jetzt lernen, wie man Text mithilfe von vorkodierten Daten automatisch klassifiziert. Dies ist eine wichtige Unterscheidung.
 
 
 Wir verwenden von Menschen codierte LABELS, um ein MODELL ZU TRAINIEREN.
@@ -166,10 +168,6 @@ In der Terminologie des maschinellen Lernens heißt DV Y LABELS, die Variablen h
 ## A simple supervised classifier
 
 
-
-
-## Naive Bayes
-
 Naive Bayes wird naive Bayes genannt, weil es die Bayes-Regel der vorherigen Dichte * neue Daten = spätere Dichte auf eine Menge Wörter anwendet. Im Gegensatz zur logistischen Regression, die ein diskriminatives Modell ist, ist NB ein generatives Textmodell (es baut ein Konzept der Kategorie auf).
 
 
@@ -220,6 +218,10 @@ t1<-table(pred,actual)
 
 caret::confusionMatrix(t1)
 ```
+
+
+Am Ende sehen diese Daten nicht gut aus, aber auch nicht schlecht. Die Zusammenhänge, die die Daten wiedergeben sorgen dafür, dass das Modell bestimmte Kategorien miteinander verwechselt. In anderen Dokumenten können einfach Begriffe fehlen, die klar mit dem Modell assoziiert sind.
+
 
 
 
@@ -399,17 +401,26 @@ table(tops$pred,tops$cap_topic)
 ## Themenmodelle validieren
  Da Themenmodelle unüberwachte Modelle sind, ist die Validierung der wichtigste Schritt. Wie viele Forscher argumentieren, ist es hauptsächlich eine "Leseunterstützung" und wenig mehr. Es gibt zwei Hauptprobleme, die alle auf der Anzahl der von uns ausgewählten Themen basieren: Sind Themen, die tatsächlich unterschiedlich sind, in derselben Kategorie zusammengefasst? Oder sind Themen über mehrere Kategorien verteilt? Haben wir zu viele Themen gewählt oder zu wenige? Sind die Themen so unausgewogen, dass der Computer zahlreiche Unterthemen von, sagen wir, Migration aufgegriffen hat, aber nur ein Thema von Außenpolitik? Sind Außenpolitik und Migration zu einem Thema zusammengefasst?
 
-Um diese Fragen zu beantworten, müssen wir die Ergebnisse sorgfältig untersuchen.
+Um diese Fragen zu beantworten, müssen wir die Ergebnisse sorgfältig untersuchen. Diskutieren Sie: 
 
-Der zentrale Grund, warum Themenmodelle und Korrespondenzanalyse keine Themen oder Dimensionen von Interesse für den Datensatz wiedergewinnen, ist, dass die Auflösungen über politische Themen hinaus oft geospezifisch sind.
+1) Wie würden Sie die extrahierten Themen intepretieren?
 
+2) Was könnten die Ursachen sein, dass sich diese Themen von den CAP Kategorien unterscheiden?
+
+3) Woran könnte man festlegen, ob ein Themenmodell "funktioniert"?
 
 
 
 ## Transfer 
 
 
-Was wäre nun, wenn wir die Worte, die wir aus dem anderen Modell gelernt haben, auf den Twitter Corpus übertragen würden?
+Was wäre nun, wenn wir die Worte, die wir aus dem anderen Modell gelernt haben, auf den Twitter Corpus übertragen würden? Wir importieren die Tweets, die wir anfangs codiert haben, und sehen uns mal an, wie das funktioniert.
+
+Am Ende ist jedes Modell nur eine Sammlung von Worten oder tokens -> wenn diese Begriffe sowohl in den Trainingsdaten, als auch in den neuen Daten vorkommen, können wir versuchen damit zu klassifizieren. Doch zunächst: Was könnten mögliche Probleme sein?
+
+1) Wie werden sich unsere 2 Samples voneinander unterscheiden?
+
+2) Welche systematischen Fehler könnten hier entstehen?
 
 
 
